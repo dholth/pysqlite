@@ -581,7 +581,7 @@ PyObject* _query_execute(Cursor* self, int multiple, PyObject* args)
     Py_BEGIN_ALLOW_THREADS
     rc = sqlite3_prepare(self->connection->db,
                          operation_cstr,
-                         0,
+                         -1,
                          &self->statement,
                          &tail);
     Py_END_ALLOW_THREADS
@@ -809,7 +809,7 @@ PyObject* cursor_executescript(Cursor* self, PyObject* args)
 
         rc = sqlite3_prepare(self->connection->db,
                              script_cstr,
-                             0,
+                             -1,
                              &statement,
                              &script_cstr);
         if (rc != SQLITE_OK) {

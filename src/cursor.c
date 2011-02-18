@@ -597,28 +597,31 @@ PyObject* _pysqlite_query_execute(pysqlite_Cursor* self, int multiple, PyObject*
 
     statement_type = detect_statement_type(operation_cstr);
     if (self->connection->begin_statement) {
+        if (!self->connection->inTransaction) {
+            result = _pysqlite_connection_begin(self->connection);
+            if (!result) {
+                goto error;
+            }
+            Py_DECREF(result);
+        }
         switch (statement_type) {
             case STATEMENT_UPDATE:
             case STATEMENT_DELETE:
             case STATEMENT_INSERT:
             case STATEMENT_REPLACE:
-                if (!self->connection->inTransaction) {
-                    result = _pysqlite_connection_begin(self->connection);
-                    if (!result) {
-                        goto error;
-                    }
-                    Py_DECREF(result);
-                }
+                // previously, transaction only begun here.
                 break;
             case STATEMENT_OTHER:
                 /* it's a DDL statement or something similar
                    - we better COMMIT first so it works for all cases */
-                if (self->connection->inTransaction) {
-                    result = pysqlite_connection_commit(self->connection, NULL);
-                    if (!result) {
-                        goto error;
+                if (0) {
+                    if (self->connection->inTransaction) {
+                        result = pysqlite_connection_commit(self->connection, NULL);
+                        if (!result) {
+                            goto error;
+                        }
+                        Py_DECREF(result);
                     }
-                    Py_DECREF(result);
                 }
                 break;
             case STATEMENT_SELECT:
